@@ -1,6 +1,7 @@
 'use strict';
 var path = require('path'),
     gutil = require('gulp-util'),
+    fileUrl = require('file-url'),
     through = require('through2'),
     glob = require('glob'),
     handlebar = require('handlebars'),
@@ -27,13 +28,13 @@ var phantomExecutable = process.platform === 'win32' ? 'phantomjs.cmd' : 'phanto
 
 function configJasmine(version) {
   version = version || '2.0';
-  jasmineCss = path.join(__dirname, '/vendor/jasmine-' + version + '/jasmine.css');
+  jasmineCss = fileUrl(path.join(__dirname, '/vendor/jasmine-' + version + '/jasmine.css'));
   jasmineJs = [
     path.join(__dirname, '/vendor/jasmine-' + version + '/jasmine.js'),
     path.join(__dirname, '/vendor/jasmine-' + version + '/jasmine-html.js'),
     path.join(__dirname, '/vendor/jasmine-' + version + '/console.js'),
     path.join(__dirname, '/vendor/jasmine-' + version + '/boot.js')
-  ];
+  ].map(fileUrl);
 }
 
 /**
@@ -133,7 +134,7 @@ function compileRunner(options) {
         }
         else {
           glob.sync(fileGlob).forEach(function(newFile) {
-            vendorJs.push(path.join(process.cwd(), newFile));
+            vendorJs.push(fileUrl(path.join(process.cwd(), newFile)));
           });
         }
       });
@@ -159,12 +160,38 @@ function compileRunner(options) {
 
       var childArgs = [
         path.join(__dirname, '/lib/jasmine-runner.js'),
-        specHtml,
+        fileUrl(specHtml),
         JSON.stringify(gulpOptions)
       ];
       runPhantom(childArgs, onComplete);
     });
   });
+}
+
+
+/**
+ * get references in text file write in chuzpath style
+ * @param content
+ * @param pathBase
+ * @returns {Array}
+ */
+function getFileReferences(content, pathBase) {
+  var pattern = /\/\/\/\s*<reference path=["\'](.*?)["\']/g,
+     references = [],
+     founds = content.toString().match(pattern);
+
+
+  founds && founds.map(function(line){
+    pattern.lastIndex = 0;
+    var match = pattern.exec(line);
+    return match && match[1];
+  }).forEach(function(refFile){
+    if (refFile && refFile.indexOf('jasmine') == -1 && references.indexOf(refFile) == -1) {
+      references.push(fileUrl(path.resolve(pathBase, refFile)));
+    }
+  });
+
+  return references;
 }
 
 module.exports = function (options) {
@@ -185,10 +212,14 @@ module.exports = function (options) {
         callback(new gutil.PluginError('gulp-jasmine-phantom', 'Streaming not supported'));
         return;
       }
-      filePaths.push(file.path);
-      callback(null, file);
-    }, function (callback) {
-      gutil.log('Running Jasmine with PhantomJS');
+
+      gutil.log('Running Jasmine test:' + file.path);
+
+      if(gulpOptions.referenceInComments){
+        filePaths = getFileReferences(file.contents, path.dirname(file.path));
+      }
+      filePaths.push(fileUrl(file.path));
+
       try {
         if(gulpOptions.specHtml) {
           runPhantom(
@@ -210,8 +241,7 @@ module.exports = function (options) {
       } catch(error) {
         callback(new gutil.PluginError('gulp-jasmine-phantom', error));
       }
-    }
-  );
+    });
 
 
 };
