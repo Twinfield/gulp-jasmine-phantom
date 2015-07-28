@@ -187,8 +187,12 @@ function getFileReferences(content, pathBase) {
     var match = pattern.exec(line);
     return match && match[1];
   }).forEach(function(refFile){
-    if (refFile && refFile.indexOf('jasmine') == -1 && references.indexOf(refFile) == -1) {
-      references.push(fileUrl(path.resolve(pathBase, refFile)));
+
+    if (refFile && refFile.indexOf('jasmine') == -1) {
+      var refPath = fileUrl(path.resolve(pathBase, refFile));
+      if( references.indexOf(refPath) == -1){
+        references.push(refPath);
+      }
     }
   });
 
