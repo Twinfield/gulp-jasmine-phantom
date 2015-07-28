@@ -23,7 +23,7 @@ var phantomExecutable = process.platform === 'win32' ? 'phantomjs.cmd' : 'phanto
     jasmineCss, jasmineJs,
     vendorJs = [],
     specHtml = path.join(__dirname, '/lib/specRunner.html'),
-    specRunner = path.join(__dirname, '/lib/specRunner.js');
+    specRunner = fileUrl(path.join(__dirname, '/lib/specRunner.js'));
 
 
 function configJasmine(version) {
@@ -33,7 +33,8 @@ function configJasmine(version) {
     path.join(__dirname, '/vendor/jasmine-' + version + '/jasmine.js'),
     path.join(__dirname, '/vendor/jasmine-' + version + '/jasmine-html.js'),
     path.join(__dirname, '/vendor/jasmine-' + version + '/console.js'),
-    path.join(__dirname, '/vendor/jasmine-' + version + '/boot.js')
+    path.join(__dirname, '/vendor/jasmine-' + version + '/boot.js'),
+    path.join(__dirname, '/vendor/jasmine-reporters-2.0/teamcity_reporter.js')
   ].map(fileUrl);
 }
 
@@ -146,7 +147,7 @@ function compileRunner(options) {
           jasmineCss: jasmineCss,
           jasmineJs: jasmineJs,
           vendorJs: vendorJs,
-          specRunner: specRunner
+          specRunner: specRunner  + (gulpOptions.reporter ? ("#" + gulpOptions.reporter): "")
         });
 
     if(gulpOptions.keepRunner !== undefined && typeof gulpOptions.keepRunner === 'string') {
