@@ -103,7 +103,8 @@ function runPhantom(childArguments, onComplete) {
     execPhantom(phantomExecutable, childArguments, onComplete);
   } else {
     gutil.log(gutil.colors.yellow('gulp-jasmine-phantom: Global Phantom undefined, trying to execute from node_modules/phantomjs'));
-    execPhantom(process.cwd() + '/node_modules/.bin/' + phantomExecutable, childArguments, onComplete);
+    var phantomPath  = process.platform === 'win32' ? '/node_modules/phantomjs/lib/phantom/phantomjs': '/node_modules/phantomjs/bin/phantomjs';
+    execPhantom(path.join(process.cwd(), phantomPath), childArguments, onComplete);
   }
 }
 
