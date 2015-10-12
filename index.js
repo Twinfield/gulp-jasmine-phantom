@@ -18,7 +18,7 @@ var path = require('path'),
  * specHtml: string path to the tmp specRunner.html to be written out to
  * specRunner: string path to the specRunner JS file needed in the specRunner.html
  **/
-var phantomExecutable = process.platform === 'win32' ? 'phantomjs.cmd' : 'phantomjs',
+var phantomExecutable = 'phantomjs',
     gulpOptions = {},
     jasmineCss, jasmineJs,
     vendorJs = [],
